@@ -1,0 +1,225 @@
+After freezeout code is compiled sucessfully
+Total Number of freezeout hypercells: 39986
+Reading the hypersurface file: ../ForKoustav/lower_mult_proxy_cut6.27975upper_mult_proxy_cut12.9697Shear_to_S_ratio0.08/surface.dat
+Hypersurface file read properly...proceeding further!
+Started reading the particle data group and user input... 
+Particle Information read successfully, no. of input: 1
+Particle Name: 		Charge: 
+Lambda		0
+Calculating Polarization...... 
+calculated upto pt: 0.495
+calculated upto pt: 0.506156
+calculated upto pt: 0.539622
+calculated upto pt: 0.5954
+calculated upto pt: 0.673489
+calculated upto pt: 0.773889
+calculated upto pt: 0.8966
+calculated upto pt: 1.04162
+calculated upto pt: 1.20896
+calculated upto pt: 1.3986
+calculated upto pt: 1.61056
+calculated upto pt: 1.84482
+calculated upto pt: 2.1014
+calculated upto pt: 2.38029
+calculated upto pt: 2.68149
+calculated upto pt: 3.005
+Calculating Polarization observables for the PID 3122
+Final Integrated result is: 1.07236
+This is the destructor called!
+Execution time :3645.58 seconds
+Total Number of freezeout hypercells: 62950
+Reading the hypersurface file: ../ForKoustav/lower_mult_proxy_cut12.9697upper_mult_proxy_cut24.3598Shear_to_S_ratio0.08/surface.dat
+Hypersurface file read properly...proceeding further!
+Started reading the particle data group and user input... 
+Particle Information read successfully, no. of input: 1
+Particle Name: 		Charge: 
+Lambda		0
+Calculating Polarization...... 
+calculated upto pt: 0.495
+calculated upto pt: 0.506156
+calculated upto pt: 0.539622
+calculated upto pt: 0.5954
+calculated upto pt: 0.673489
+calculated upto pt: 0.773889
+calculated upto pt: 0.8966
+calculated upto pt: 1.04162
+calculated upto pt: 1.20896
+calculated upto pt: 1.3986
+calculated upto pt: 1.61056
+calculated upto pt: 1.84482
+calculated upto pt: 2.1014
+calculated upto pt: 2.38029
+calculated upto pt: 2.68149
+calculated upto pt: 3.005
+Calculating Polarization observables for the PID 3122
+Final Integrated result is: 0.92185
+This is the destructor called!
+Execution time :2442.4 seconds
+Total Number of freezeout hypercells: 91312
+Reading the hypersurface file: ../ForKoustav/lower_mult_proxy_cut24.3498upper_mult_proxy_cut42.1198Shear_to_S_ratio0.08/surface.dat
+Hypersurface file read properly...proceeding further!
+Started reading the particle data group and user input... 
+Particle Information read successfully, no. of input: 1
+Particle Name: 		Charge: 
+Lambda		0
+Calculating Polarization...... 
+calculated upto pt: 0.495
+calculated upto pt: 0.506156
+calculated upto pt: 0.539622
+calculated upto pt: 0.5954
+calculated upto pt: 0.673489
+calculated upto pt: 0.773889
+calculated upto pt: 0.8966
+calculated upto pt: 1.04162
+calculated upto pt: 1.20896
+calculated upto pt: 1.3986
+calculated upto pt: 1.61056
+calculated upto pt: 1.84482
+calculated upto pt: 2.1014
+calculated upto pt: 2.38029
+calculated upto pt: 2.68149
+calculated upto pt: 3.005
+Calculating Polarization observables for the PID 3122
+Final Integrated result is: 0.846245
+This is the destructor called!
+Execution time :1981.33 seconds
+Total Number of freezeout hypercells: 125778
+Reading the hypersurface file: ../ForKoustav/lower_mult_proxy_cut42.1198upper_mult_proxy_cut68.1697Shear_to_S_ratio0.08/surface.dat
+Hypersurface file read properly...proceeding further!
+Started reading the particle data group and user input... 
+Particle Information read successfully, no. of input: 1
+Particle Name: 		Charge: 
+Lambda		0
+Calculating Polarization...... 
+calculated upto pt: 0.495
+calculated upto pt: 0.506156
+calculated upto pt: 0.539622
+calculated upto pt: 0.5954
+calculated upto pt: 0.673489
+calculated upto pt: 0.773889
+calculated upto pt: 0.8966
+calculated upto pt: 1.04162
+calculated upto pt: 1.20896
+calculated upto pt: 1.3986
+calculated upto pt: 1.61056
+calculated upto pt: 1.84482
+calculated upto pt: 2.1014
+calculated upto pt: 2.38029
+calculated upto pt: 2.68149
+calculated upto pt: 3.005
+Calculating Polarization observables for the PID 3122
+Final Integrated result is: 0.738304
+This is the destructor called!
+Execution time :4343.54 seconds
+Total Number of freezeout hypercells: 167146
+Reading the hypersurface file: ../ForKoustav/lower_mult_proxy_cut68.1697upper_mult_proxy_cut105.19Shear_to_S_ratio0.08/surface.dat
+Hypersurface file read properly...proceeding further!
+Started reading the particle data group and user input... 
+Particle Information read successfully, no. of input: 1
+Particle Name: 		Charge: 
+Lambda		0
+Calculating Polarization...... 
+calculated upto pt: 0.495
+calculated upto pt: 0.506156
+calculated upto pt: 0.539622
+calculated upto pt: 0.5954
+calculated upto pt: 0.673489
+calculated upto pt: 0.773889
+calculated upto pt: 0.8966
+calculated upto pt: 1.04162
+calculated upto pt: 1.20896
+calculated upto pt: 1.3986
+calculated upto pt: 1.61056
+calculated upto pt: 1.84482
+calculated upto pt: 2.1014
+calculated upto pt: 2.38029
+calculated upto pt: 2.68149
+calculated upto pt: 3.005
+Calculating Polarization observables for the PID 3122
+Final Integrated result is: 0.634701
+This is the destructor called!
+Execution time :5385.33 seconds
+Total Number of freezeout hypercells: 216437
+Reading the hypersurface file: ../ForKoustav/lower_mult_proxy_cut105.19upper_mult_proxy_cut156.38Shear_to_S_ratio0.08/surface.dat
+Hypersurface file read properly...proceeding further!
+Started reading the particle data group and user input... 
+Particle Information read successfully, no. of input: 1
+Particle Name: 		Charge: 
+Lambda		0
+Calculating Polarization...... 
+calculated upto pt: 0.495
+calculated upto pt: 0.506156
+calculated upto pt: 0.539622
+calculated upto pt: 0.5954
+calculated upto pt: 0.673489
+calculated upto pt: 0.773889
+calculated upto pt: 0.8966
+calculated upto pt: 1.04162
+calculated upto pt: 1.20896
+calculated upto pt: 1.3986
+calculated upto pt: 1.61056
+calculated upto pt: 1.84482
+calculated upto pt: 2.1014
+calculated upto pt: 2.38029
+calculated upto pt: 2.68149
+calculated upto pt: 3.005
+Calculating Polarization observables for the PID 3122
+Final Integrated result is: 0.524343
+This is the destructor called!
+Execution time :6109.42 seconds
+Total Number of freezeout hypercells: 279132
+Reading the hypersurface file: ../ForKoustav/lower_mult_proxy_cut156.38upper_mult_proxy_cut228.56Shear_to_S_ratio0.08/surface.dat
+Hypersurface file read properly...proceeding further!
+Started reading the particle data group and user input... 
+Particle Information read successfully, no. of input: 1
+Particle Name: 		Charge: 
+Lambda		0
+Calculating Polarization...... 
+calculated upto pt: 0.495
+calculated upto pt: 0.506156
+calculated upto pt: 0.539622
+calculated upto pt: 0.5954
+calculated upto pt: 0.673489
+calculated upto pt: 0.773889
+calculated upto pt: 0.8966
+calculated upto pt: 1.04162
+calculated upto pt: 1.20896
+calculated upto pt: 1.3986
+calculated upto pt: 1.61056
+calculated upto pt: 1.84482
+calculated upto pt: 2.1014
+calculated upto pt: 2.38029
+calculated upto pt: 2.68149
+calculated upto pt: 3.005
+Calculating Polarization observables for the PID 3122
+Final Integrated result is: 0.412104
+This is the destructor called!
+Execution time :5354.38 seconds
+Total Number of freezeout hypercells: 359755
+Reading the hypersurface file: ../ForKoustav/lower_mult_proxy_cut228.56upper_mult_proxy_cut364.84Shear_to_S_ratio0.08/surface.dat
+Hypersurface file read properly...proceeding further!
+Started reading the particle data group and user input... 
+Particle Information read successfully, no. of input: 1
+Particle Name: 		Charge: 
+Lambda		0
+Calculating Polarization...... 
+calculated upto pt: 0.495
+calculated upto pt: 0.506156
+calculated upto pt: 0.539622
+calculated upto pt: 0.5954
+calculated upto pt: 0.673489
+calculated upto pt: 0.773889
+calculated upto pt: 0.8966
+calculated upto pt: 1.04162
+calculated upto pt: 1.20896
+calculated upto pt: 1.3986
+calculated upto pt: 1.61056
+calculated upto pt: 1.84482
+calculated upto pt: 2.1014
+calculated upto pt: 2.38029
+calculated upto pt: 2.68149
+calculated upto pt: 3.005
+Calculating Polarization observables for the PID 3122
+Final Integrated result is: 0.231006
+This is the destructor called!
+Execution time :5899.66 seconds
