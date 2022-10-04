@@ -401,7 +401,7 @@ void freezeout::read_particles_info()
     }
   }
   cout << "Particle Information read successfully, no. of input: " << PIDS.size() << endl;
-  cout<< "Particle Name: " << "\t\t" << "Charge: " <<endl;
+  cout << "Particle Name: " << "\t\t" << "Charge: " << endl;
   
   for (int i = 0; i < PIDS.size() ; i++)
     cout << my_Particle_list[i].name <<  "\t\t" << my_Particle_list[i].charge <<endl;
@@ -766,7 +766,7 @@ void freezeout::calc_polarization(){
   double a_pt, b_phi, c_y, tempc_y;
   //spin-of the particle is hard coded for time-being
   double spin = 0.5;            
-  std :: ofstream writefile("yptphi_Prest_all_particles.dat");
+  std::ofstream writefile("yptphi_Prest_all_particles.dat");
   
   for(int a = 0; a < N_steps_pt; a++){
     a_pt = (pt_min+ (pt_max - pt_min)
@@ -778,17 +778,18 @@ void freezeout::calc_polarization(){
 	tempc_y = -y_max + c*dy;   //pseudorapidity
 	// pseudorapidity cut  
 	if (fabs(tempc_y) > eta_cut ) continue;
-	
 	writefile << tempc_y << " " << a_pt << " " << b_phi << " "; 
-	c_y = Rap(tempc_y, a_pt, particle_of_interest.mass);           //conversion to rapidity
+        //conversion to rapidity
+	c_y = Rap(tempc_y, a_pt, particle_of_interest.mass); 
 	
 	for (int i = 0; i < PIDS.size(); i++){   //particle loop  
-	  double val_num = 0, val_denom = 0;
+	  double val_num   = 0 ;
+          double val_denom = 0 ;
 	  double S_lab[4];
-	  particle_of_interest.baryon = my_Particle_list[i].baryon;
-	  particle_of_interest.mass = my_Particle_list[i].mass;
-	  particle_of_interest.number = my_Particle_list[i].number;
-	  particle_of_interest.degeneracy = my_Particle_list[i].degeneracy;
+	  particle_of_interest.baryon     =  my_Particle_list[i].baryon;
+	  particle_of_interest.mass       =  my_Particle_list[i].mass;
+	  particle_of_interest.number     =  my_Particle_list[i].number;
+	  particle_of_interest.degeneracy =  my_Particle_list[i].degeneracy;
 	  double mass_h = particle_of_interest.mass;
 	  
 	  val_denom = single_point_integration(a_pt, b_phi, c_y, InvYieldNoVisc);
@@ -798,40 +799,53 @@ void freezeout::calc_polarization(){
 	    if (val_denom != 0 ){   
 	      S_lab[mu] = (1.0/spin) * val_num / val_denom;
 	    }
-	    else
-	      {
+	    else{
 		cout << "Fatal Error!!" <<endl;
 		exit(1);
-	      }
+	    }
 	  }
 	  
-	  //conversion from Milne to Cartesian
-	  double PolLab[3], MomentumLab[3];
+          // ================================================ //
+	  // Lorentz transformation to particle's rest frame. //
+          // ================================================ //
+
+          // PolLab[3] contains 3 components of contravariant polarization tensor,  P^{x}, P^{y} and P^{z}.
+	  double PolLab[3], MomentumLab[3]; 
 	  PolLab[0]  = S_lab[1];
 	  PolLab[1]  = S_lab[2];
 	  PolLab[2]  = S_lab[0]*sinh(c_y) + S_lab[3]*cosh(c_y);
 	  
+          // MomentumLab[3] contains 3 components of contravariant p^{\mu} tensor, p^{x}, p^{y}, p^{z}.
 	  MomentumLab[0] = a_pt*cos(b_phi);
 	  MomentumLab[1] = a_pt*sin(b_phi);
 	  MomentumLab[2] = pow (pow(a_pt, 2) + pow(particle_of_interest.mass, 2), 0.5) * sinh(c_y);
 	  
-	  double mod_p_sq = 0, inner_Pp = 0, E = 0;
+	  double mod_p_sq = 0 ; // p^{2}
+          double inner_Pp = 0 ; // inner product of particle momentum and polarization (p.P) 
+          double E        = 0 ; // energy at specified momentum.
 	  for (int i = 0; i < 3; i++){
 	    mod_p_sq += pow(MomentumLab[i], 2);
 	    inner_Pp += PolLab[i] * MomentumLab[i];
 	  }
 	  E = sqrt (pow(mass_h, 2) + mod_p_sq);
+
+          // Storring space like components of Polarization(in particle rest frame) in diff_P_rest[pT][phi][eta][0]
+          // diff_P_rest[pT][phi][eta][1] and diff_P_rest[pT][phi][eta][2].
+          // Not storing diff_P_rest[pT][phi][y][t] = 0 
 	  for (int i_mu = 1; i_mu < 4; i_mu++){
-	    double result =  PolLab[i_mu - 1] - (inner_Pp)/(E * (E + mass_h))*MomentumLab[i_mu-1];
+            // Eq.(40) of arXiv:2106.08125 or Eq.(11) of arXiv:2011.03740
+	    double result =  PolLab[i_mu-1] - (inner_Pp)/(E * (E + mass_h))*MomentumLab[i_mu-1];
 	    writefile << result  << " "; 
-	    diff_P_rest[a][b][c][i_mu - 1] = result;
+	    diff_P_rest[a][b][c][i_mu-1] = result;
 	  }
-	}
+	} // loop over PID
 	writefile << endl;
-      }
-    }
+
+
+      } // rapidity loop
+    } // phi loop
     std::cout << "calculated upto pt: " << a_pt << std::endl; 
-  }
+  } // pT loop
   writefile.close();
 }
 

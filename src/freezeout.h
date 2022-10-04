@@ -53,7 +53,7 @@ typedef struct de {      //imported from MUSIC
     int    part[5];     // array of daughter particles Montecarlo number
 } de;
 
-typedef struct surfaceElement {             //imported from MUSIC and edited
+typedef struct surfaceElement {             // imported from MUSIC and edited
     double x[4];                            // position in (tau, x, y, eta)
     double sinh_eta_s;                      // caching the sinh and cosh of eta_s
     double cosh_eta_s;
@@ -61,7 +61,7 @@ typedef struct surfaceElement {             //imported from MUSIC and edited
     double u[4];                            // flow velocity in (tau, x, y, eta)
     double W[4][4];                         // W^{\mu\nu}
     double q[4];                            // baryon diffusion current
-    double d_mu_betanu[4][4];               //gradient of inverse-temperature field 
+    double d_mu_betanu[4][4];               // gradient of inverse-temperature field 
     double pi_b;                            // bulk pressure
     double rho_B;                           // net baryon density
 
