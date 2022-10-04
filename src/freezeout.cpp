@@ -504,16 +504,16 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 	rhoB = hypersurface_cells[icell].rho_B;
         
 	//check the beautiful interplay of the units
-	double eps_plus_P_over_T = hypersurface_cells[icell].eps_plus_p_over_T_FO;           //fm^{-3}
-	double prefactor_shear = 1./(2.*eps_plus_P_over_T*T*T*T)*hbarc;                      // fm^4/GeV^2
-	double prefactor_qmu = rhoB/(eps_plus_P_over_T*T);                                  // 1/GeV
+	double eps_plus_P_over_T = hypersurface_cells[icell].eps_plus_p_over_T_FO;  // fm^{-3}
+	double prefactor_shear = 1./(2.*eps_plus_P_over_T*T*T*T)*hbarc;             // fm^{4}/GeV^{2}
+	double prefactor_qmu = rhoB/(eps_plus_P_over_T*T);                          // GeV^{-1}
 	
 	//energy-momemtum 4-vector in Milne-tilde coordinates 
 	double mt = sqrt(pow(particle_of_interest.mass, 2) + pow(pt, 2));    
 	double ptau = mt*(cosh(y)*cosh_eta_s
 			  - sinh(y)*sinh_eta_s); 
 	double peta = mt*(sinh(y)*cosh_eta_s
-			  - cosh(y)*sinh_eta_s);        //note that there is no tau factor in the denominator
+			  - cosh(y)*sinh_eta_s);
 	double px = pt*cos(phi);
 	double py = pt*sin(phi);
 	double sum;
@@ -538,12 +538,16 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 	
 	//the final integrand : put the flags here 
 	switch (Flag){
+
+
 	case InvYieldNoVisc:
 	  {   
 	    prefactor = 1.0;
 	    sum = (prefactor * f) * pdSigma ;
 	    break;
 	  }
+
+
 	case MusicSameParam:
 	  {
 	    prefactor = particle_of_interest.degeneracy/(pow(2.*M_PI,3.)*pow(hbarc,3.));
@@ -633,8 +637,11 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 	    break;
 	  }
 	  
-	  
-	  //Flag for Local Spin Polarization, check again and again
+
+
+	// ========================================= //
+	// Flag to calculate Local Spin Polarization //
+	// ========================================= //
 	case NumSLab:
 	  {       
 	    prefactor = 1.0;
@@ -651,48 +658,69 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 		d_mu_betanu[mu][nu] = 0.0;
 	      }
 	    
-	    //from the hypersurface, one obtains d_\mu \beta^{\nu}
+	    //from the hypersurface, one obtains \partial_{\mu} \beta^{\nu}
 	    for (int mu = 0; mu < 4; mu++) 
 	      for (int nu = 0; nu < 4; nu++){
 		d_mu_betanu[mu][nu] = hypersurface_cells[icell].d_mu_betanu[mu][nu];
 	      }
 	    
-	    //d_\mu \beta_{\nu} = d_\mu \beta^{\rho} * g_{\rho\nu}
+
+            // Conversion of \partial_{\mu} \beta^{\nu}  to \partial_{\mu} \beta_{\nu}
+	    // d_\mu \beta_{\nu} = d_\mu \beta^{\rho} * g_{\rho\nu}
+            // g_{\mu\nu} = g^{\mu\nu}
 	    for (int mu = 0; mu < 4; mu++) 
 	      for (int nu = 0; nu < 4; nu++) {
 		double sum_murho = 0.0;
 		for (int rho = 0; rho < 4; rho++){
-		  sum_murho += d_mu_betanu[mu][rho] * gmunu_tilde[rho][nu]; //since g_{\mu\nu} = g^{\mu\nu}
+		  sum_murho += d_mu_betanu[mu][rho]*gmunu_tilde[rho][nu]; 
 		}
 		d_mu_beta_nu[mu][nu] = sum_murho;
 	      }
 	    
 	    
-	    //to check
-	    /*
-	      for (int mu = 0; mu < 4; mu++) 
-	      for (int nu = 0; nu < 4; nu++) {
-	      cout << "d_" << mu <<  " beta^" << nu  << " "<< d_mu_betanu[mu][nu] << " " << d_mu_beta_nu[mu][nu] << std :: endl;
-	      }
-	      exit(1);*/
-	    
-            
+            // Calculation of \omega_{\mu \nu}
+            // The form of \omega_{\mu}{\nu} is in Eq. (7) of arXiv:2011.03740
+            // Now the calculated \omega_{\mu}{\nu} is in Milne co-ordinate           
 	    for (int mu = 0; mu < 4; mu++) 
 	      for (int nu = 0; nu < 4; nu++){
 		omega_munu[mu][nu] = - 0.5 * (d_mu_beta_nu[mu][nu] - d_mu_beta_nu[nu][mu]);
 	      }
-	    sum = 0;
+
             
-	    for (int rho = 0; rho < 4; rho++){
-	      for (int sig = 0; sig < 4; sig++){
-		for (int itau = 0; itau < 4; itau++){
-		  sum += (0.5) * levicivita_4indices_sup[index_mu][rho][sig][itau]*p_mu[itau]*pdSigma*
-		    (1.0 -(prefactor * f)) * (prefactor * f ) *omega_munu[rho][sig]; 
-		  
-		}
-	      }
-	    }
-	    sum *= - 0.25 /(particle_of_interest.mass); 
+           // Calculation of S^{\mu} = [1-f(x,p)] \epsilon^{\mu \nu \rho \sigma} p_{\sigma} \omega_{\nu \rho}
+           // S^{\mu} defined here is same as in Eq. (6) of arXiv:2011.03740 but without the term -1/(2*m)*(S*(S+1))/3
+           // The term -1/(2*m)*(S*(S+1))/3 will be incorporated in the calc_polarization() function.
+           double S[4] = {0.,0.,0.,0.} ; 
+           for(int imu=0; imu<4; imu++){
+             S[imu] = 0. ;
+             for(int inu=0; inu<4; inu++){
+               for(int irho=0; irho<4; irho++){
+                 for(int isigma=0; isigma<4; isigma++){
+                    S[imu] += (1.0 -(prefactor * f))*
+                      levicivita_4indices_sup[imu][inu][irho][isigma]*
+                        p_mu[isigma] * omega_munu[inu][irho] ;
+                 }
+               }
+             }
+           }
+
+
+           // Transformation of S^{\mu} from Milne to cartesian co-ordinate.
+           double auxiliaryS[4] = {0.,0.,0.,0.} ; 
+	    for(int ii = 0; ii < 4; ii++){
+	       auxiliaryS[ii] = S[ii];   
+            }
+            S[1] = auxiliaryS[1] ;
+            S[2] = auxiliaryS[2] ;
+            S[0] = cosh_eta_s * auxiliaryS[0] + sinh_eta_s * auxiliaryS[3] ; 
+            S[3] = sinh_eta_s * auxiliaryS[0] + cosh_eta_s * auxiliaryS[3] ;
+
+	    sum = 0;
+            // numerator of Eq.(9) in arXiv:2011.03740
+	    for(int ii = 0; ii < 4; ii++){
+	       sum += pdSigma * (prefactor*f) * S[ii];   
+            }
+	      
 	    break;
 	  }
           
@@ -701,25 +729,30 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 	  exit(1);
 	  break;
 	}
+
         
-        
-	if (sum > 10000) {
-	  std :: cout << "sum>10000 in summation. sum = " << sum << ", f = " << f << ", delta f = " << delta_f_shear
-		      << ", pdSigma = " << pdSigma << ", T=" << T  << ", E = " << E << ", mu = " << mu;
+        // checks for unphysical instances. //
+	if(sum > 10000){
+	  std::cout << "sum>10000 in summation. sum = " << sum << ", f = " <<
+                        f << ", delta f = " << delta_f_shear << ", pdSigma = " <<
+                        pdSigma << ", T=" << T  << ", E = " << E << ", mu = " << mu;
 	}
-	if (f < 0.) {
-	  std:: cout << " f_eq < 0.! f_eq = " << f << ", T = " << T << " GeV, mu = " << mu << " GeV, E = " << E << " GeV";
+	if(f < 0.){
+	  std::cout << " f_eq < 0.! f_eq = " << f << ", T = " << T << " GeV, mu = " <<
+                        mu << " GeV, E = " << E << " GeV";
 	}
+
 	//integrating             
 	temp_sum += sum;
-      }
-    }
+
+      } // if (y-etas) < y_minus_eta_cut
+    } // loop over cell
 #pragma omp critical
     {
       total_sum += temp_sum ; 
-    }          
+    }   // critical sum
     
-  }
+  } // openpm thread sharing
   return total_sum ;
   
 }
@@ -796,8 +829,10 @@ void freezeout::calc_polarization(){
           
 	  for (int mu = 0; mu < 4; mu++){
 	    val_num = single_point_integration(a_pt, b_phi, c_y, NumSLab, mu);
-	    if (val_denom != 0 ){   
-	      S_lab[mu] = (1.0/spin) * val_num / val_denom;
+	    if (val_denom != 0 ){ 
+              // The term -1/(2*m)*(S*(S+1))/3 is the scalar co-efficient of S^{\mu} in Eq.(6) of arXiv:2011.03740.
+              // Again another S is devided to get the average polarization in Lab frame.    
+	      S_lab[mu] = (-1./(2.*mass_h)) * (spin+1.) / 3. * val_num / val_denom;
 	    }
 	    else{
 		cout << "Fatal Error!!" <<endl;
