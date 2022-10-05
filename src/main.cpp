@@ -20,7 +20,7 @@ using namespace std;
 int main(int argc, char* argv[]){
     auto start = high_resolution_clock::now();
     
-    double pt_min = 0.495, pt_max = 3.005, y_max = 1.05;
+    double pt_min = 0.1, pt_max = 3.0, y_max = 1.05;
     int n_pt  = 16 ; // length of the total pt_array
     int n_y   = 33 ; // array length in pseudo-rapidity 
     int n_phi = 24 ;

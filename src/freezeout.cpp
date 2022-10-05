@@ -409,9 +409,15 @@ void freezeout::read_particles_info()
 
 
 
-double freezeout::single_point_integration(double pt, double phi, double y, int Flag, int index_mu){
-  double y_minus_eta_cut = 3.0;
-  double total_sum = 0;
+double freezeout::single_point_integration(double pt, double phi, double y, int Flag, double* MSP){
+
+  // MSP : Mean Spin Vector
+  for(int ii=0; ii<4; ii++){
+      MSP[ii] = 0. ; 
+  }
+
+  double y_minus_eta_cut = 10.0;
+  double total_sum[4] = {0.,0.,0.,0.};
   
   //check here
   double prefactor;
@@ -420,7 +426,11 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 #pragma omp parallel 
   {
     
-    double temp_sum = 0;                    //thread local variable
+    double temp_sum[4] = {0.,0.,0.,0.};                    //thread local variable
+    for(int ii=0; ii<4; ii++){
+       temp_sum[ii] = 0. ; 
+    }
+
     
 #pragma omp for  
     for (int icell = 0; icell < N_hypercells; icell++) {
@@ -429,84 +439,25 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
       if (fabs(y - eta_s) < y_minus_eta_cut ){
 	double cosh_eta_s = hypersurface_cells[icell].cosh_eta_s;
 	double sinh_eta_s = hypersurface_cells[icell].sinh_eta_s;
-	double T   = hypersurface_cells[icell].T_f * hbarc;               // GeV
+	double T   = hypersurface_cells[icell].T_f  * hbarc;              // GeV
 	double muB = hypersurface_cells[icell].mu_B * hbarc;              // GeV
 	double muC = hypersurface_cells[icell].mu_C * hbarc;              // GeV
 	double muS = hypersurface_cells[icell].mu_S * hbarc;              // GeV
 	double mu  = particle_of_interest.baryon * muB
 	  + particle_of_interest.charge * muC
 	  + particle_of_interest.strange * muS;           // GeV
-	double sigma_mu[4];
-	double u_flow[4];
+	double sigma_mu[4]={0.,0.,0.,0.};
+	double u_flow[4]={0.,0.,0.,0.};
 	for(int ii = 0; ii < 4; ii++){
 	  sigma_mu[ii] = hypersurface_cells[icell].s[ii];
 	  u_flow[ii] = hypersurface_cells[icell].u[ii];
 	}
-	
-	//first initializing all the quantities
-	double W00 = 0.0;
-	double W01 = 0.0;
-	double W02 = 0.0;
-	double W03 = 0.0;
-	double W11 = 0.0;
-	double W12 = 0.0;
-	double W13 = 0.0;
-	double W22 = 0.0;
-	double W23 = 0.0;
-	double W33 = 0.0;
-	
-	W00 = hypersurface_cells[icell].W[0][0];
-	W01 = hypersurface_cells[icell].W[0][1];
-	W02 = hypersurface_cells[icell].W[0][2];
-	W03 = hypersurface_cells[icell].W[0][3];
-	W11 = hypersurface_cells[icell].W[1][1];
-	W12 = hypersurface_cells[icell].W[1][2];
-	W13 = hypersurface_cells[icell].W[1][3];
-	W22 = hypersurface_cells[icell].W[2][2];
-	W23 = hypersurface_cells[icell].W[2][3];
-	W33 = hypersurface_cells[icell].W[3][3];
-        
-	//for time-being, bulk viscosities are turned off
-	/*double Pi_bulk = 0.0;
-	  int flag_bulk_deltaf = 0;
-	  if (DATA->turn_on_bulk == 1 && DATA->include_deltaf_bulk == 1) {
-	  flag_bulk_deltaf = 1;
-	  Pi_bulk = surface[icell].pi_b;
-	  getbulkvisCoefficients(T, bulk_deltaf_coeffs);
-	  }*/
-	
-        
-	double qmu_0 = 0.0;
-	double qmu_1 = 0.0;
-	double qmu_2 = 0.0;
-	double qmu_3 = 0.0;
-	double deltaf_qmu_coeff = 1.0;
-	double deltaf_qmu_coeff_14mom_DV = 0.0;
-	double deltaf_qmu_coeff_14mom_BV = 0.0;
-        
-	//flags to include later onwards
-	/*{
-	  qmu_0 = hypersurface_cells[icell].q[0];
-	  qmu_1 = hypersurface_cells[icell].q[1];
-	  qmu_2 = hypersurface_cells[icell].q[2];
-	  qmu_3 = hypersurface_cells[icell].q[3];
-	  }*/
-	
-	//flags to include later onwards
-	{
-	  deltaf_qmu_coeff_14mom_DV =
-	    get_deltaf_coeff_14moments(T, muB, 3);
-	  deltaf_qmu_coeff_14mom_BV =
-	    get_deltaf_coeff_14moments(T, muB, 4);
-	}
-        
-	double rhoB = 0.0;
-	rhoB = hypersurface_cells[icell].rho_B;
-        
+	       
+
 	//check the beautiful interplay of the units
 	double eps_plus_P_over_T = hypersurface_cells[icell].eps_plus_p_over_T_FO;  // fm^{-3}
 	double prefactor_shear = 1./(2.*eps_plus_P_over_T*T*T*T)*hbarc;             // fm^{4}/GeV^{2}
-	double prefactor_qmu = rhoB/(eps_plus_P_over_T*T);                          // GeV^{-1}
+
 	
 	//energy-momemtum 4-vector in Milne-tilde coordinates 
 	double mt = sqrt(pow(particle_of_interest.mass, 2) + pow(pt, 2));    
@@ -514,9 +465,9 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 			  - sinh(y)*sinh_eta_s); 
 	double peta = mt*(sinh(y)*cosh_eta_s
 			  - cosh(y)*sinh_eta_s);
-	double px = pt*cos(phi);
-	double py = pt*sin(phi);
-	double sum;
+	double px  = pt*cos(phi);
+	double py  = pt*sin(phi);
+	double sum = 0. ;
 	
 	// compute p^mu*dSigma_mu [fm^3*GeV]
 	double pdSigma = tau*(ptau*sigma_mu[0]
@@ -532,111 +483,40 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 	
 	// this is the equilibrium f, f_0:
 	double f = 1./(exp(1./T*(E - mu)) + sign);
-        
-	double Wfactor = 0.0;
-	double delta_f_shear = 0.0;
-	
+        if( std::isinf(f) || std::isnan(f) ){
+            std::cout << "E = " << E << ",  T =" << T << std::endl ; 
+            std::cout << "f is inf/nan ... " << std::endl ;
+             exit(1); 
+        }        
+
+
+	double sum0 = 0;
+	double sum1 = 0;
+	double sum2 = 0;
+	double sum3 = 0;
+
 	//the final integrand : put the flags here 
 	switch (Flag){
-
 
 	case InvYieldNoVisc:
 	  {   
 	    prefactor = 1.0;
-	    sum = (prefactor * f) * pdSigma ;
+	    sum0 = (prefactor * f) * pdSigma ;
+             // Don't delete, although redundant
+	    sum1 = (prefactor * f) * pdSigma ;
+	    sum2 = (prefactor * f) * pdSigma ;
+	    sum3 = (prefactor * f) * pdSigma ;
+
+            if( std::isinf(sum) || std::isnan(sum) ){       
+                std::cout << "ptau = " << ptau << ", px = " << px << ", py = " << py << ",  peta =" << peta << std::endl ; 
+                std::cout << "stau = " << sigma_mu[0] << ", sx = " << sigma_mu[1] << ", sy = " << sigma_mu[2] << ",  seta =" << sigma_mu[3] << std::endl ;
+                std::cout << "tau = " << tau << std::endl ;  
+                std::cout << "f = " << f << ",  pdSigma =" << pdSigma << std::endl ; 
+                std::cout << "Sum for InvYieldNoVisc is inf/nan ... " << std::endl ;
+                exit(1); 
+            }   
 	    break;
 	  }
-
-
-	case MusicSameParam:
-	  {
-	    prefactor = particle_of_interest.degeneracy/(pow(2.*M_PI,3.)*pow(hbarc,3.));
-	    
-	    // now comes the delta_f: check if still correct
-	    // at finite mu_b 
-	    // we assume here the same C=eta/s for
-	    // all particle species because
-	    // it is the simplest way to do it.
-	    // also we assume Xi(p)=p^2, the quadratic Ansatz
-	    //correction to f (delta_f due to shear viscosity)
-	    
-            
-	    Wfactor = (ptau*W00*ptau - 2.*ptau*W01*px
-		       - 2.*ptau*W02*py
-		       - 2.*ptau*W03*peta
-		       + px*W11*px + 2.*px*W12*py
-		       + 2.*px*W13*peta
-		       + py*W22*py + 2.*py*W23*peta
-		       + peta*W33*peta);
-	    delta_f_shear = (f*(1. - sign*f)
-			     *prefactor_shear*Wfactor);
-	    
-	    /*double delta_f_bulk = 0.0;
-	      if (flag_bulk_deltaf == 1) {
-	      if (bulk_deltaf_kind == 0) {
-	      delta_f_bulk = (
-	      - f*(1. - sign*f)*Pi_bulk
-	      *(bulk_deltaf_coeffs[0]*m*m
-	      + bulk_deltaf_coeffs[1]*E
-	      + bulk_deltaf_coeffs[2]*E*E));
-	      } else if (bulk_deltaf_kind == 1) {
-	      double E_over_T = E/T;
-	      double mass_over_T = m/T;
-	      delta_f_bulk = (
-	      - f*(1. - sign*f)/E_over_T
-	      *bulk_deltaf_coeffs[0]
-	      *(mass_over_T*mass_over_T/3.
-	      - bulk_deltaf_coeffs[1]
-	      *E_over_T*E_over_T)
-	      *Pi_bulk);
-	      } else if (bulk_deltaf_kind == 2) {
-	      double E_over_T = E/T;
-	      delta_f_bulk = (
-	      - f*(1. - sign*f)
-	      *(-bulk_deltaf_coeffs[0]
-	      + bulk_deltaf_coeffs[1]*E_over_T)
-	      *Pi_bulk);
-	      } else if (bulk_deltaf_kind == 3) {
-	      double E_over_T = E/T;
-	      delta_f_bulk = (
-	      - f*(1.-sign*f)/sqrt(E_over_T)
-	      *(- bulk_deltaf_coeffs[0]
-	      + bulk_deltaf_coeffs[1]*E_over_T)
-	      *Pi_bulk);
-	      } else if (bulk_deltaf_kind == 4) {
-	      double E_over_T = E/T;
-	      delta_f_bulk = (
-	      - f*(1.-sign*f)
-	      *(bulk_deltaf_coeffs[0]
-	      - bulk_deltaf_coeffs[1]/E_over_T)
-	      *Pi_bulk);
-	      }
-	      }*/
-	    
-	    // delta f for qmu
-	    double qmufactor = 0.0;
-	    double delta_f_qmu = 0.0;
-	    {
-	      // p^\mu q_\mu
-	      qmufactor = (ptau*qmu_0 - px*qmu_1 - py*qmu_2 - peta*qmu_3); 
-	      delta_f_qmu = ( f*(1. - sign*f) *(particle_of_interest.baryon * deltaf_qmu_coeff_14mom_DV
-						+ 2.*deltaf_qmu_coeff_14mom_BV*E)*qmufactor);
-	      
-	    }
-	    
-	    double max_ratio = 1.0;
-	    double total_deltaf = (delta_f_shear 
-				   //                          + delta_f_bulk
-				   + delta_f_qmu);
-	    
-	    //regularizing the delta_f
-	    if (fabs(total_deltaf)/f > max_ratio) {
-	      total_deltaf *= f/fabs(total_deltaf);
-	    }
-	    sum = prefactor * (f + total_deltaf)*pdSigma;
-	    break;
-	  }
-	  
 
 
 	// ========================================= //
@@ -715,12 +595,12 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
             S[0] = cosh_eta_s * auxiliaryS[0] + sinh_eta_s * auxiliaryS[3] ; 
             S[3] = sinh_eta_s * auxiliaryS[0] + cosh_eta_s * auxiliaryS[3] ;
 
-	    sum = 0;
             // numerator of Eq.(9) in arXiv:2011.03740
-	    for(int ii = 0; ii < 4; ii++){
-	       sum += pdSigma * (prefactor*f) * S[ii];   
-            }
-	      
+	    sum0 = pdSigma * (prefactor*f) * S[0];   
+	    sum1 = pdSigma * (prefactor*f) * S[1];   
+	    sum2 = pdSigma * (prefactor*f) * S[2];   
+	    sum3 = pdSigma * (prefactor*f) * S[3];   
+            	      
 	    break;
 	  }
           
@@ -734,7 +614,7 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
         // checks for unphysical instances. //
 	if(sum > 10000){
 	  std::cout << "sum>10000 in summation. sum = " << sum << ", f = " <<
-                        f << ", delta f = " << delta_f_shear << ", pdSigma = " <<
+                        f << ", pdSigma = " <<
                         pdSigma << ", T=" << T  << ", E = " << E << ", mu = " << mu;
 	}
 	if(f < 0.){
@@ -743,22 +623,36 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 	}
 
 	//integrating             
-	temp_sum += sum;
+	temp_sum[0] += sum0;
+	temp_sum[1] += sum1;
+	temp_sum[2] += sum2;
+	temp_sum[3] += sum3;
 
       } // if (y-etas) < y_minus_eta_cut
     } // loop over cell
 #pragma omp critical
     {
-      total_sum += temp_sum ; 
+      for(int ii=0; ii<4; ii++){
+        total_sum[ii] += temp_sum[ii] ; 
+      }
     }   // critical sum
     
   } // openpm thread sharing
-  return total_sum ;
+  
+
+  // required to group and deliver the mean spin polarisation vectors
+  MSP[0] = total_sum[0];
+  MSP[1] = total_sum[1];
+  MSP[2] = total_sum[2];
+  MSP[3] = total_sum[3];
+
+  // required for denominator 
+  return total_sum[0] ;
   
 }
 
 
-
+/*
 void freezeout::phase_space_distribution_integration(){
   
   std:: ofstream writefile("yptphi_sprectra_all_particles.dat");
@@ -792,6 +686,7 @@ void freezeout::phase_space_distribution_integration(){
   writefile.close();
 }
 
+*/
 
 void freezeout::calc_polarization(){
   std::cout << "Calculating polarization ...  " << std::endl;
@@ -818,28 +713,33 @@ void freezeout::calc_polarization(){
 	for (int i = 0; i < PIDS.size(); i++){   //particle loop  
 	  double val_num   = 0 ;
           double val_denom = 0 ;
-	  double S_lab[4];
+	  double S_lab[4] = {0.,0.,0.,0.};
 	  particle_of_interest.baryon     =  my_Particle_list[i].baryon;
 	  particle_of_interest.mass       =  my_Particle_list[i].mass;
 	  particle_of_interest.number     =  my_Particle_list[i].number;
 	  particle_of_interest.degeneracy =  my_Particle_list[i].degeneracy;
 	  double mass_h = particle_of_interest.mass;
 	  
-	  val_denom = single_point_integration(a_pt, b_phi, c_y, InvYieldNoVisc);
-          
+          double Wrapper[4] = {0.,0.,0.,0.} ; 
+
+	  val_denom = single_point_integration(a_pt, b_phi, c_y, InvYieldNoVisc, Wrapper);
+          val_num   = single_point_integration(a_pt, b_phi, c_y, NumSLab, Wrapper);
+
+
+          // The term -1/(2*m)*(S*(S+1))/3 is the scalar co-efficient of S^{\mu} in Eq.(6) of arXiv:2011.03740.
+          // Again another S is devided to get the average polarization in Lab frame.    
 	  for (int mu = 0; mu < 4; mu++){
-	    val_num = single_point_integration(a_pt, b_phi, c_y, NumSLab, mu);
-	    if (val_denom != 0 ){ 
-              // The term -1/(2*m)*(S*(S+1))/3 is the scalar co-efficient of S^{\mu} in Eq.(6) of arXiv:2011.03740.
-              // Again another S is devided to get the average polarization in Lab frame.    
-	      S_lab[mu] = (-1./(2.*mass_h)) * (spin+1.) / 3. * val_num / val_denom;
-	    }
-	    else{
-		cout << "Fatal Error!!" <<endl;
-		exit(1);
-	    }
-	  }
-	  
+            S_lab[mu] = (-1./(2.*mass_h)) * (spin+1.) / 3. * Wrapper[mu] / val_denom ;
+            if( std::isinf(S_lab[mu]) || std::isnan(S_lab[mu]) ){
+              std::cout << "================ inside polarization calculation ===============" << std::endl ; 
+              std::cout << "Numertor = " << val_num << ",  denominator =" << val_denom << std::endl ; 
+              std::cout << "S_Lab is inf/nan ... " << std::endl ;
+              exit(1); 
+            }
+
+          }
+          
+
           // ================================================ //
 	  // Lorentz transformation to particle's rest frame. //
           // ================================================ //

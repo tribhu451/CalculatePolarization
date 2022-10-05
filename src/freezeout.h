@@ -137,7 +137,7 @@ public:
 
 
     //functions to perform the phase-space integration 
-    double single_point_integration(double pt, double phi, double y, int Flag, int index_mu = 0);
+    double single_point_integration(double pt, double phi, double y, int Flag, double* MSP);
     void  phase_space_distribution_integration();
     void calc_polarization();
     void calc_pol_related_observables();
