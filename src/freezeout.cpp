@@ -848,7 +848,8 @@ void freezeout::calc_polarization(){
 	  double PolLab[3], MomentumLab[3]; 
 	  PolLab[0]  = S_lab[1];
 	  PolLab[1]  = S_lab[2];
-	  PolLab[2]  = S_lab[0]*sinh(c_y) + S_lab[3]*cosh(c_y);
+	  //PolLab[2]  = S_lab[0]*sinh(c_y) + S_lab[3]*cosh(c_y);
+	  PolLab[2]  = S_lab[3];
 	  
           // MomentumLab[3] contains 3 components of contravariant p^{\mu} tensor, p^{x}, p^{y}, p^{z}.
 	  MomentumLab[0] = a_pt*cos(b_phi);
