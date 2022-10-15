@@ -38,7 +38,7 @@ typedef struct particle {           //imported from MUSIC
     double phimax;
     double ymax;
     double deltaY;
-    double dNdydptdphi[NY][NPT][NPHI+1];
+    double dNdydptdphi[NPT][NPHI][NY];
     double slope;           // assymtotic slope of pt-spectrum
     double muAtFreezeOut;   // the chemical potential at freeze-out
                             // for the partial chemical equilibrium EoS
@@ -120,7 +120,8 @@ private:
     double **deltaf_coeff_tb_14mom_Bpi_shear;
 
     //quantities for polarization
-    double diff_P_rest[NPT][NPHI][NY][Fourindices - 1]; 
+    double diff_P_rest[NPT][NPHI][NY][Fourindices];
+    double denom_dndydptdphi[NPT][NPHI][NY]; 
     
 public:
     freezeout();
@@ -141,6 +142,7 @@ public:
     void  phase_space_distribution_integration();
     void calc_polarization();
     void calc_pol_related_observables();
+    void calculate_pseudo_rapidity_differential_polarization();
     double dydeta(double eta, double pt, double m);
    
 

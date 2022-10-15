@@ -289,8 +289,8 @@ void freezeout::fill_hypersurface_elements(){
 		  >> temp_cell.W[2][3] >> temp_cell.W[3][3];
       readsurface >> temp_cell.rho_B;
       //bulk-viscous effect is off, hence no Pi 
-      //baryon-diffusion is off
-      //readsurface >> temp_cell.q[0] >> temp_cell.q[1] >> temp_cell.q[2] >> temp_cell.q[3];
+      //baryon-diffusion is on/off
+      readsurface >> temp_cell.q[0] >> temp_cell.q[1] >> temp_cell.q[2] >> temp_cell.q[3];
       
       // freeze-out Gradients
       for (int mu = 0; mu < 4; mu++)
@@ -426,7 +426,7 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 #pragma omp parallel 
   {
     
-    double temp_sum[4] = {0.,0.,0.,0.};                    //thread local variable
+    double temp_sum[4] = {0.,0.,0.,0.};  //thread local variable
     for(int ii=0; ii<4; ii++){
        temp_sum[ii] = 0. ; 
     }
@@ -501,20 +501,12 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 	case InvYieldNoVisc:
 	  {   
 	    prefactor = 1.0;
-	    sum0 = (prefactor * f) * pdSigma ;
+	    sum0 = (prefactor * f) * pdSigma / pow(hbarc, 3.) ;
              // Don't delete, although redundant
-	    sum1 = (prefactor * f) * pdSigma ;
-	    sum2 = (prefactor * f) * pdSigma ;
-	    sum3 = (prefactor * f) * pdSigma ;
+	    sum1 = (prefactor * f) * pdSigma / pow(hbarc, 3.) ;
+	    sum2 = (prefactor * f) * pdSigma / pow(hbarc, 3.);
+	    sum3 = (prefactor * f) * pdSigma / pow(hbarc, 3.);
 
-            if( std::isinf(sum) || std::isnan(sum) ){       
-                std::cout << "ptau = " << ptau << ", px = " << px << ", py = " << py << ",  peta =" << peta << std::endl ; 
-                std::cout << "stau = " << sigma_mu[0] << ", sx = " << sigma_mu[1] << ", sy = " << sigma_mu[2] << ",  seta =" << sigma_mu[3] << std::endl ;
-                std::cout << "tau = " << tau << std::endl ;  
-                std::cout << "f = " << f << ",  pdSigma =" << pdSigma << std::endl ; 
-                std::cout << "Sum for InvYieldNoVisc is inf/nan ... " << std::endl ;
-                exit(1); 
-            }   
 	    break;
 	  }
 
@@ -533,22 +525,24 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 	    p_mu[2] = -py;
 	    p_mu[3] = -peta;
 	    
-	    for (int mu = 0; mu < 4; mu++) 
+	    for (int mu = 0; mu < 4; mu++){ 
 	      for (int nu = 0; nu < 4; nu++){
 		d_mu_betanu[mu][nu] = 0.0;
 	      }
+            }
 	    
 	    //from the hypersurface, one obtains \partial_{\mu} \beta^{\nu}
-	    for (int mu = 0; mu < 4; mu++) 
+	    for (int mu = 0; mu < 4; mu++){ 
 	      for (int nu = 0; nu < 4; nu++){
 		d_mu_betanu[mu][nu] = hypersurface_cells[icell].d_mu_betanu[mu][nu];
 	      }
-	    
+            }
+           
 
             // Conversion of \partial_{\mu} \beta^{\nu}  to \partial_{\mu} \beta_{\nu}
 	    // d_\mu \beta_{\nu} = d_\mu \beta^{\rho} * g_{\rho\nu}
             // g_{\mu\nu} = g^{\mu\nu}
-	    for (int mu = 0; mu < 4; mu++) 
+	    for (int mu = 0; mu < 4; mu++){ 
 	      for (int nu = 0; nu < 4; nu++) {
 		double sum_murho = 0.0;
 		for (int rho = 0; rho < 4; rho++){
@@ -556,15 +550,17 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 		}
 		d_mu_beta_nu[mu][nu] = sum_murho;
 	      }
+            }
 	    
 	    
             // Calculation of \omega_{\mu \nu}
             // The form of \omega_{\mu}{\nu} is in Eq. (7) of arXiv:2011.03740
             // Now the calculated \omega_{\mu}{\nu} is in Milne co-ordinate           
-	    for (int mu = 0; mu < 4; mu++) 
+	    for (int mu = 0; mu < 4; mu++){ 
 	      for (int nu = 0; nu < 4; nu++){
 		omega_munu[mu][nu] = - 0.5 * (d_mu_beta_nu[mu][nu] - d_mu_beta_nu[nu][mu]);
 	      }
+            }
 
             
            // Calculation of S^{\mu} = [1-f(x,p)] \epsilon^{\mu \nu \rho \sigma} p_{\sigma} \omega_{\nu \rho}
@@ -595,11 +591,31 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
             S[0] = cosh_eta_s * auxiliaryS[0] + sinh_eta_s * auxiliaryS[3] ; 
             S[3] = sinh_eta_s * auxiliaryS[0] + cosh_eta_s * auxiliaryS[3] ;
 
+
+            // Lorentz transformation of S^{\mu} to particle rest frame
+	    for(int ii = 0; ii < 4; ii++){
+	       auxiliaryS[ii] = S[ii];   
+            }
+            double pz_ = mt * sinh(y);
+            double E_  = mt * cosh(y);
+            double mass = sqrt(mt*mt - pt*pt) ;  
+            double Sdotp = px * S[1] + py * S[2] + pz_ * S[3] ; 
+            S[0] = E_ / mass * auxiliaryS[0] - Sdotp / mass ; 
+            S[1] = auxiliaryS[1] - Sdotp / ( E_*(E_+mass) ) * px ;     
+            S[2] = auxiliaryS[2] - Sdotp / ( E_*(E_+mass) ) * py ;     
+            S[3] = auxiliaryS[3] - Sdotp / ( E_*(E_+mass) ) * pz_ ; 
+
+            if(fabs(S[0])> 0.0001){
+               std::cout << "S^{t} > 0.0001" << std::endl ; 
+               exit(1);
+            }
+ 
+
             // numerator of Eq.(9) in arXiv:2011.03740
-	    sum0 = pdSigma * (prefactor*f) * S[0];   
-	    sum1 = pdSigma * (prefactor*f) * S[1];   
-	    sum2 = pdSigma * (prefactor*f) * S[2];   
-	    sum3 = pdSigma * (prefactor*f) * S[3];   
+	    sum0 = pdSigma * (prefactor*f) * S[0] / pow(hbarc, 3.);   
+	    sum1 = pdSigma * (prefactor*f) * S[1] / pow(hbarc, 3.);   
+	    sum2 = pdSigma * (prefactor*f) * S[2] / pow(hbarc, 3.);   
+	    sum3 = pdSigma * (prefactor*f) * S[3] / pow(hbarc, 3.);   
             	      
 	    break;
 	  }
@@ -611,9 +627,25 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 	}
 
         
-        // checks for unphysical instances. //
-	if(sum > 10000){
-	  std::cout << "sum>10000 in summation. sum = " << sum << ", f = " <<
+
+        // === checks for unphysical instances. ===  //
+	if(sum0 > 10000.){
+	  std::cout << "sum0>10000 in summation. sum0 = " << sum0 << ", f = " <<
+                        f << ", pdSigma = " <<
+                        pdSigma << ", T=" << T  << ", E = " << E << ", mu = " << mu;
+	}
+	if(sum1 > 10000.){
+	  std::cout << "sum1>10000 in summation. sum1 = " << sum0 << ", f = " <<
+                        f << ", pdSigma = " <<
+                        pdSigma << ", T=" << T  << ", E = " << E << ", mu = " << mu;
+	}
+	if(sum2 > 10000.){
+	  std::cout << "sum2>10000 in summation. sum2 = " << sum0 << ", f = " <<
+                        f << ", pdSigma = " <<
+                        pdSigma << ", T=" << T  << ", E = " << E << ", mu = " << mu;
+	}
+	if(sum3 > 10000.){
+	  std::cout << "sum3>10000 in summation. sum3 = " << sum0 << ", f = " <<
                         f << ", pdSigma = " <<
                         pdSigma << ", T=" << T  << ", E = " << E << ", mu = " << mu;
 	}
@@ -621,6 +653,8 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 	  std::cout << " f_eq < 0.! f_eq = " << f << ", T = " << T << " GeV, mu = " <<
                         mu << " GeV, E = " << E << " GeV";
 	}
+        // =========================================  //
+
 
 	//integrating             
 	temp_sum[0] += sum0;
@@ -640,7 +674,7 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
   } // openpm thread sharing
   
 
-  // required to group and deliver the mean spin polarisation vectors
+  // required to Wrap/group and deliver the mean spin vectors
   MSP[0] = total_sum[0];
   MSP[1] = total_sum[1];
   MSP[2] = total_sum[2];
@@ -690,7 +724,6 @@ void freezeout::phase_space_distribution_integration(){
 
 void freezeout::calc_polarization(){
   std::cout << "Calculating polarization ...  " << std::endl;
-  double eta_cut = 4.0;                                                               
   double a_pt, b_phi, c_y, tempc_y;
   //spin-of the particle is hard coded for time-being
   double spin = 0.5;            
@@ -705,10 +738,7 @@ void freezeout::calc_polarization(){
       for (int c = 0; c < N_steps_y; c++){
 	tempc_y = -y_max + c*dy;   //pseudorapidity
 	// pseudorapidity cut  
-	if (fabs(tempc_y) > eta_cut ) continue;
 	writefile << tempc_y << " " << a_pt << " " << b_phi << " "; 
-        //conversion to rapidity
-	c_y = Rap(tempc_y, a_pt, particle_of_interest.mass); 
 	
 	for (int i = 0; i < PIDS.size(); i++){   //particle loop  
 	  double val_num   = 0 ;
@@ -719,60 +749,43 @@ void freezeout::calc_polarization(){
 	  particle_of_interest.number     =  my_Particle_list[i].number;
 	  particle_of_interest.degeneracy =  my_Particle_list[i].degeneracy;
 	  double mass_h = particle_of_interest.mass;
+          //std::cout << "particle pf interest PID        : " << particle_of_interest.number << std::endl ; 
+          //std::cout << "particle pf interest mass       : " << particle_of_interest.mass << std::endl ; 
+          //std::cout << "particle pf interest baryon no. : " << particle_of_interest.baryon << std::endl ; 
 	  
           double Wrapper[4] = {0.,0.,0.,0.} ; 
 
+	  c_y = Rap(tempc_y, a_pt, mass_h ); 
 	  val_denom = single_point_integration(a_pt, b_phi, c_y, InvYieldNoVisc, Wrapper);
+          denom_dndydptdphi[a][b][c] = val_denom ; 
+ 
           val_num   = single_point_integration(a_pt, b_phi, c_y, NumSLab, Wrapper);
-
 
           // The term -1/(2*m)*(S*(S+1))/3 is the scalar co-efficient of S^{\mu} in Eq.(6) of arXiv:2011.03740.
           // Again another S is devided to get the average polarization in Lab frame.    
 	  for (int mu = 0; mu < 4; mu++){
-            S_lab[mu] = (-1./(2.*mass_h)) * (spin+1.) / 3. * Wrapper[mu] / val_denom ;
+            S_lab[mu] = (-1./(2.*mass_h)) * (spin+1.) / 3. * Wrapper[mu]  ;
             if( std::isinf(S_lab[mu]) || std::isnan(S_lab[mu]) ){
               std::cout << "================ inside polarization calculation ===============" << std::endl ; 
               std::cout << "Numertor = " << val_num << ",  denominator =" << val_denom << std::endl ; 
               std::cout << "S_Lab is inf/nan ... " << std::endl ;
               exit(1); 
             }
-
           }
           
-
-          // ================================================ //
-	  // Lorentz transformation to particle's rest frame. //
-          // ================================================ //
-
-          // PolLab[3] contains 3 components of contravariant polarization tensor,  P^{x}, P^{y} and P^{z}.
-	  double PolLab[3], MomentumLab[3]; 
-	  PolLab[0]  = S_lab[1];
-	  PolLab[1]  = S_lab[2];
-	  //PolLab[2]  = S_lab[0]*sinh(c_y) + S_lab[3]*cosh(c_y);
-	  PolLab[2]  = S_lab[3];
+          // PolLab[4] contains 4 components of contravariant polarization tensor,  P^{t}, P^{x}, P^{y} and P^{z}.
+	  double PolLab[4], MomentumLab[3]; 
+	  PolLab[0]  = S_lab[0];
+	  PolLab[1]  = S_lab[1];
+	  PolLab[2]  = S_lab[2];
+	  PolLab[3]  = S_lab[3];
 	  
-          // MomentumLab[3] contains 3 components of contravariant p^{\mu} tensor, p^{x}, p^{y}, p^{z}.
-	  MomentumLab[0] = a_pt*cos(b_phi);
-	  MomentumLab[1] = a_pt*sin(b_phi);
-	  MomentumLab[2] = pow (pow(a_pt, 2) + pow(particle_of_interest.mass, 2), 0.5) * sinh(c_y);
-	  
-	  double mod_p_sq = 0 ; // p^{2}
-          double inner_Pp = 0 ; // inner product of particle momentum and polarization (p.P) 
-          double E        = 0 ; // energy at specified momentum.
-	  for (int i = 0; i < 3; i++){
-	    mod_p_sq += pow(MomentumLab[i], 2);
-	    inner_Pp += PolLab[i] * MomentumLab[i];
-	  }
-	  E = sqrt (pow(mass_h, 2) + mod_p_sq);
-
-          // Storring space like components of Polarization(in particle rest frame) in diff_P_rest[pT][phi][eta][0]
+          // Storring space like components of Polarization(in particle rest frame) in diff_P_rest[pT][phi][eta][0],
           // diff_P_rest[pT][phi][eta][1] and diff_P_rest[pT][phi][eta][2].
-          // Not storing diff_P_rest[pT][phi][y][t] = 0 
-	  for (int i_mu = 1; i_mu < 4; i_mu++){
-            // Eq.(40) of arXiv:2106.08125 or Eq.(11) of arXiv:2011.03740
-	    double result =  PolLab[i_mu-1] - (inner_Pp)/(E * (E + mass_h))*MomentumLab[i_mu-1];
+	  for (int i_mu = 0; i_mu < 4; i_mu++){
+	    double result =  PolLab[i_mu] ;
 	    writefile << result  << " "; 
-	    diff_P_rest[a][b][c][i_mu-1] = result;
+	    diff_P_rest[a][b][c][i_mu] = result;
 	  }
 	} // loop over PID
 	writefile << endl;
@@ -780,7 +793,7 @@ void freezeout::calc_polarization(){
 
       } // rapidity loop
     } // phi loop
-    std::cout << "calculated upto pt: " << a_pt << std::endl; 
+    std::cout << "Calculated pT =  " << a_pt << " (GeV) ... " << std::endl; 
   } // pT loop
   writefile.close();
 }
