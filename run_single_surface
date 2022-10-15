@@ -1,7 +1,0 @@
-#! /bin/bash
-
-rm -rf test* Py_vs_pt.dat yptphi_Prest_all_particles.dat
-g++ -fopenmp -o test src/*.cpp -lm -lgsl -lgslcblas
-echo "After freezeout code is compiled sucessfully"
-
-./test $1  my_particles.dat 
