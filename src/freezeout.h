@@ -126,10 +126,10 @@ private:
 public:
     freezeout();
     ~freezeout();
-    void prepare_data_files(std :: string, std :: string);
+    void prepare_data_files(std :: string, int);
     void count_number_of_hypercells();
     void fill_hypersurface_elements();
-    void read_particles_info();
+    void read_particles_info(int );
     //void test_function();
     void set_momentum_grid_params(double, double, int, int, double, int);
     double PseudoRap(double y, double pt, double m);
@@ -141,16 +141,10 @@ public:
     double single_point_integration(double pt, double phi, double y, int Flag, double* MSP);
     void  phase_space_distribution_integration();
     void calc_polarization();
-    void calc_pol_related_observables();
+    void calc_pol_related_observables(int , double , double );
     void calculate_pseudo_rapidity_differential_polarization();
     double dydeta(double eta, double pt, double m);
    
-
-
-    //functions to calculate final state observables (setting the benchmark)
-    //void calculate_vn_pt_at_y_0(int n);
-    //void calculate_pt_spectra_at_y_0();
-
 
     //imported from music
     void load_deltaf_qmu_coeff_table(std::string filename);

@@ -8,16 +8,16 @@ using namespace std;
 int main(int argc, char* argv[]){
     auto start = high_resolution_clock::now();
     
-    double pt_min = 0.1, pt_max = 3.0, y_max = 1.05;
+    double pt_min = 0.15, pt_max = 3.05, y_max = 3.01;
     int n_pt  = 24 ; // length of the total pt_array
-    int n_y   = 24 ; // array length in pseudo-rapidity 
+    int n_y   = 48 ; // array length in pseudo-rapidity 
     int n_phi = 48 ;
     int number_of_particles = 1;
    
     freezeout *frzout;
     frzout = new freezeout();
 
-    frzout->prepare_data_files(argv[1], argv[2]);
+    frzout->prepare_data_files(argv[1], atof(argv[2]));
     // description about above function //
     // argument-1 : path to hypersurface file
     // argument-2 : path to the file which contains PID of the particles
@@ -29,7 +29,8 @@ int main(int argc, char* argv[]){
     //frzout->phase_space_distribution_integration();
 
     frzout->calc_polarization();
-    frzout->calc_pol_related_observables();
+    frzout->calc_pol_related_observables(0, -1., 1.);
+    frzout->calc_pol_related_observables(1, -1., 1.);
     frzout->calculate_pseudo_rapidity_differential_polarization();
 
 

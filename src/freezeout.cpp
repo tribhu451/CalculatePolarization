@@ -209,13 +209,12 @@ double freezeout::get_deltaf_coeff_14moments(double T, double muB, double type){
 }
 
 //my addition starts
-void freezeout::prepare_data_files(string _hypersurface_dat_file, string expected_particles){
+void freezeout::prepare_data_files(string _hypersurface_dat_file, int expected_particles){
   surface_dat_file.str(_hypersurface_dat_file);
   pdg_dat_file.str("pdg/pdg05.dat");
-  input_particles.str(expected_particles);
   count_number_of_hypercells();
   fill_hypersurface_elements();
-  read_particles_info();
+  read_particles_info(expected_particles);
 }
 
 void freezeout::set_momentum_grid_params(double _ptmin, double _ptmax, int n_pt, int n_phi, double y, int n_y){
@@ -308,24 +307,13 @@ void freezeout::fill_hypersurface_elements(){
   cout << "Hypersurface file read properly...proceeding further!" << endl;
 }
 
-/*void freezeout :: test_function(){
-  ofstream write("test.dat");
-  int i = 0;
-  while (i< N_hypercells)
-  {
-  if(i%10 == 0)
-  write << hypersurface_cells[i].x[0] <<  "\t\t" << hypersurface_cells[i].x[2] <<
-  "\t\t" << hypersurface_cells[i].d_mu_betanu[0][0] <<
-  "\t\t" <<  hypersurface_cells[i].T_f * hbarc << endl;
-  i++;
-  }
-  write.close();
-  
-  }*/
 
 
-void freezeout::read_particles_info()
+
+void freezeout::read_particles_info(int temp_PID)
 {   
+
+  /*
   std :: cout << "Started reading the particle data group and user input... " << std:: endl;
   //reading the particle IDs from the user input file 
   ifstream read_inputPIDS(input_particles.str());
@@ -340,7 +328,10 @@ void freezeout::read_particles_info()
     PIDS.push_back(temp_PID);
   }
   read_inputPIDS.close();
-  
+ */
+  PIDS.push_back(temp_PID);  
+
+  int i = 0 ; 
   //reading and storing particles from particle data group
   Particle_list = (Particle *)malloc(current_max*sizeof(Particle));
   FILE *p_file;
@@ -374,6 +365,28 @@ void freezeout::read_particles_info()
       }
       j++;
     }
+
+    // include anti-baryons (there are none in the file)
+    if(Particle_list[i].baryon != 0) {
+       i++;
+       //particleList[i].name  = Util::char_malloc(50);
+       Particle_list[i].width   =  Particle_list[i-1].width;
+       Particle_list[i].charm   = -Particle_list[i-1].charm;
+       Particle_list[i].bottom  = -Particle_list[i-1].bottom;
+       Particle_list[i].isospin =  Particle_list[i-1].isospin;
+       Particle_list[i].charge  = -Particle_list[i-1].charge;
+       Particle_list[i].decays  =  Particle_list[i-1].decays;
+       Particle_list[i].stable  =  Particle_list[i-1].stable;
+       Particle_list[i].number  = -Particle_list[i-1].number;
+       strcpy(Particle_list[i].name, "Anti-");
+       strcat(Particle_list[i].name,Particle_list[i-1].name);
+       Particle_list[i].mass       =  Particle_list[i-1].mass;
+       Particle_list[i].degeneracy =  Particle_list[i-1].degeneracy;
+       Particle_list[i].baryon     = -Particle_list[i-1].baryon;
+       Particle_list[i].strange    = -Particle_list[i-1].strange;
+       Particle_list[i].charge     = -Particle_list[i-1].charge;
+     }
+
     i++;
   }
   fclose(p_file);
@@ -401,10 +414,14 @@ void freezeout::read_particles_info()
     }
   }
   cout << "Particle Information read successfully, no. of input: " << PIDS.size() << endl;
-  cout << "Particle Name: " << "\t\t" << "Charge: " << endl;
-  
-  for (int i = 0; i < PIDS.size() ; i++)
-    cout << my_Particle_list[i].name <<  "\t\t" << my_Particle_list[i].charge <<endl;
+  cout << "******************************************************" << endl ; 
+  cout << "Particle Name: " << "   " << "Charge: " << "  "<< "Baryon No:  " << "Mass:  " << endl;
+  cout << "======================================================" << endl ; 
+  for (int i = 0; i < PIDS.size() ; i++){
+    cout << my_Particle_list[i].name <<  "  " << my_Particle_list[i].charge << "  " 
+         << my_Particle_list[i].baryon << "  " << my_Particle_list[i].mass <<endl;
+  }
+  cout << "******************************************************" << endl ; 
 }
 
 
@@ -686,41 +703,6 @@ double freezeout::single_point_integration(double pt, double phi, double y, int 
 }
 
 
-/*
-void freezeout::phase_space_distribution_integration(){
-  
-  std:: ofstream writefile("yptphi_sprectra_all_particles.dat");
-  double a_pt, b_phi, c_y, tempc_y;
-  
-  for (int a = 0; a < N_steps_pt; a++){
-    a_pt = (pt_min+ (pt_max - pt_min)
-	    *pow(static_cast<double>(a), 2.)
-	    /pow(static_cast<double>(N_steps_pt - 1), 2.));
-    for (int b = 0; b < N_steps_phi; b++){
-      b_phi = b * dphi;
-      for (int c = 0; c < N_steps_y; c++){
-	tempc_y = - y_max + c*dy;
-	writefile << tempc_y << " " << a_pt << " " << b_phi << " ";
-	for (int i = 0; i < PIDS.size(); i++){
-	  double result = 0;
-	  particle_of_interest.baryon = my_Particle_list[i].baryon;
-	  particle_of_interest.mass = my_Particle_list[i].mass;
-	  particle_of_interest.number = my_Particle_list[i].number;
-	  particle_of_interest.degeneracy = my_Particle_list[i].degeneracy;
-          
-	  c_y = Rap(tempc_y, a_pt, particle_of_interest.mass);
-	  result = single_point_integration(a_pt, b_phi, c_y, MusicSameParam);
-	  writefile << result  << " "; 
-	  my_Particle_list[i].dNdydptdphi[c][a][b] = result;
-	}
-	writefile << endl;
-      }
-    }
-  }
-  writefile.close();
-}
-
-*/
 
 void freezeout::calc_polarization(){
   std::cout << "Calculating polarization ...  " << std::endl;
