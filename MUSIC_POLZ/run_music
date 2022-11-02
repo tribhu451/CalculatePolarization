@@ -1,0 +1,10 @@
+#!/bin/bash
+ 
+rm -rf MUSIChydro 
+cd build/
+rm -rf src/MUSIChydro
+make -j 10
+mv src/MUSIChydro ../
+cd ..
+./MUSIChydro $1
+

@@ -1,0 +1,43 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/music.dir/u_derivative.cpp.o"
+  "CMakeFiles/music.dir/dissipative.cpp.o"
+  "CMakeFiles/music.dir/cell.cpp.o"
+  "CMakeFiles/music.dir/init.cpp.o"
+  "CMakeFiles/music.dir/reconst.cpp.o"
+  "CMakeFiles/music.dir/minmod.cpp.o"
+  "CMakeFiles/music.dir/music.cpp.o"
+  "CMakeFiles/music.dir/cornelius.cpp.o"
+  "CMakeFiles/music.dir/hydro_source_base.cpp.o"
+  "CMakeFiles/music.dir/hydro_source_strings.cpp.o"
+  "CMakeFiles/music.dir/hydro_source_ampt.cpp.o"
+  "CMakeFiles/music.dir/pretty_ostream.cpp.o"
+  "CMakeFiles/music.dir/freeze.cpp.o"
+  "CMakeFiles/music.dir/grid_info.cpp.o"
+  "CMakeFiles/music.dir/grid.cpp.o"
+  "CMakeFiles/music.dir/util.cpp.o"
+  "CMakeFiles/music.dir/read_in_parameters.cpp.o"
+  "CMakeFiles/music.dir/freeze_pseudo.cpp.o"
+  "CMakeFiles/music.dir/reso_decay.cpp.o"
+  "CMakeFiles/music.dir/advance.cpp.o"
+  "CMakeFiles/music.dir/eos.cpp.o"
+  "CMakeFiles/music.dir/eos_base.cpp.o"
+  "CMakeFiles/music.dir/eos_idealgas.cpp.o"
+  "CMakeFiles/music.dir/eos_EOSQ.cpp.o"
+  "CMakeFiles/music.dir/eos_s95p.cpp.o"
+  "CMakeFiles/music.dir/eos_WB.cpp.o"
+  "CMakeFiles/music.dir/eos_hotQCD.cpp.o"
+  "CMakeFiles/music.dir/eos_best.cpp.o"
+  "CMakeFiles/music.dir/eos_neos.cpp.o"
+  "CMakeFiles/music.dir/evolve.cpp.o"
+  "CMakeFiles/music.dir/emoji.cpp.o"
+  "CMakeFiles/music.dir/music_logo.cpp.o"
+  "CMakeFiles/music.dir/HydroinfoMUSIC.cpp.o"
+  "CMakeFiles/music.dir/transport_coeffs.cpp.o"
+  "libmusic.pdb"
+  "libmusic.so"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/music.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
